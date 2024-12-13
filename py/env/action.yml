@@ -1,0 +1,17 @@
+---
+
+name: Set shared variables, pip config for python workflows
+inputs:
+  pypi-private-user:
+    required: false
+    default: ''
+  pypi-private-password:
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Set Environment
+      shell: bash -l {0}
+      run: sed "" ./actions/py/env/env >> $GITHUB_ENV
