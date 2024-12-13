@@ -1,0 +1,102 @@
+---
+
+name: Run Python tests with unittest
+inputs:
+  python-version:
+    description: Version of Python to use
+    required: true
+
+  bot-ssh-key:
+    description: GitHub bot SSH private key
+    required: false
+    default: ''
+
+  unit-test-directory:
+    description: Path to unit tests
+    required: false
+    default: ''
+
+  integration-test-directory:
+    description: Path to integration tests
+    required: false
+    default: ''
+
+  test-script:
+    description: Path to a script that runs tests
+    required: false
+    default: ''
+
+  requirements-file-basename:
+    description: Basename of the requirements file
+    required: false
+    default: requirements.txt
+
+  pypi-private-user:
+    required: false
+    default: ''
+  pypi-private-password:
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Setup Python Environment
+      uses: ./actions/py/env
+      with:
+        pypi-private-user: ${{ inputs.pypi-private-user }}
+        pypi-private-password: ${{ inputs.pypi-private-password }}
+
+    - name: Setup ssh-agent
+      if: inputs.bot-ssh-key != ''
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ inputs.bot-ssh-key }}
+
+    - name: Replace "git+file" with "git+ssh" in requirements
+      if: inputs.bot-ssh-key != ''
+      shell: bash -l {0}
+      run: |
+        if [ -f "${{ inputs.requirements-file-basename }}" ]; then
+          sed -i 's;git+file:///stack/lib/;git+ssh://git@github.com/Exabyte-io/;g' \
+            ${{ inputs.requirements-file-basename }}
+        fi
+
+    - name: Install dependencies
+      shell: bash -l {0}
+      run: |
+        python -m pip install \
+          pip==${PIP_VERSION} \
+          setuptools==${SETUPTOOLS_VERSION} \
+          wheel==${WHEEL_VERSION}
+        # Prioritize requirements.txt file if present, or use pyproject.toml (".[tests]")
+        if [ -f "${{ inputs.requirements-file-basename }}" ]; then
+          pip install -r ${{ inputs.requirements-file-basename }}
+        else
+          pip install ".[tests]"
+        fi
+
+    - name: Run unit tests
+      if: inputs.unit-test-directory != ''
+      shell: bash -l {0}
+      # yamllint disable rule:line-length
+      run: python -m unittest discover --verbose --catch --start-directory ${{ inputs.unit-test-directory }}
+      # yamllint enable rule:line-length
+
+    - name: Run integration tests
+      if: inputs.integration-test-directory != ''
+      shell: bash -l {0}
+      # yamllint disable rule:line-length
+      run: python -m unittest discover --verbose --catch --start-directory ${{ inputs.integration-test-directory }}
+      # yamllint enable rule:line-length
+
+    - name: Run scripted tests
+      if: inputs.test-script != ''
+      shell: bash -l {0}
+      run: |
+        python ${{ inputs.test-script }}
