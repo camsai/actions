@@ -63,7 +63,7 @@ runs:
       shell: bash -l {0}
       run: |
         if [ -f "${{ inputs.requirements-file-basename }}" ]; then
-          sed -i 's;git+file:///stack/lib/;git+ssh://git@github.com/Exabyte-io/;g' \
+          sed -i 's;git+file:///stack/lib/;git+ssh://git@github.com/camsai/;g' \
             ${{ inputs.requirements-file-basename }}
         fi
 

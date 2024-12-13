@@ -1,0 +1,38 @@
+---
+
+name: Release to Github
+inputs:
+  github-token:
+    description: grants access to github repository
+    required: true
+    default: ''
+  tag-name:
+    description: name of tag to push and release
+    required: true
+    default: ''
+  skip-publish:
+    description: whether to only create tag and not publish it
+    required: true
+    default: ''
+
+runs:
+  using: composite
+  steps:
+
+    - name: Create git tag
+      shell: bash -l {0}
+      run: git tag ${{ inputs.tag-name }}
+
+    - name: Push Tag To Remote
+      if: inputs.skip-publish == ''
+      shell: bash -l {0}
+      run: |
+          git push origin ${{ inputs.tag-name }}
+          sleep 15  # give github time to register the tag before publishing
+
+    - name: Create Release
+      if: inputs.skip-publish == ''
+      shell: bash -l {0}
+      run: |
+          NOTES="Release ${{ inputs.tag-name }} created by github-workflow-bot"
+          gh release create ${{ inputs.tag-name }} --title v${{inputs.tag-name }} --notes "${NOTES}"

@@ -1,0 +1,30 @@
+---
+
+name: Configure Git Repository
+inputs:
+  github-token:
+    description: grants access to github repository
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Configure git for bot account
+      shell: bash -l {0}
+      run: |
+        # configure git repository for downstream interaction
+        REPO_URL=https://${{ inputs.github-token }}@github.com/${{ github.repository }}.git
+        git remote set-url origin ${REPO_URL}
+        git config user.name "github-workflow-bot"
+        git config user.email "info@camsai.org"
+    - name: Authenticate to github CLI
+      shell: bash -l {0}
+      run: |
+        # configure github cli for automatic release generation
+        echo "${{ inputs.github-token }}" > token.dat
+        gh auth login --with-token < token.dat
+    - name: Fetch git tags
+      shell: bash -l {0}
+      run: |
+        # fetch all git tags for version logic
+        git fetch --prune --unshallow --tags

@@ -47,7 +47,7 @@ runs:
       if: inputs.bot-ssh-key != ''
       shell: bash -l {0}
       run: |
-        sed -i 's;git+file:///stack/lib/;git+ssh://git@github.com/Exabyte-io/;g' \
+        sed -i 's;git+file:///stack/lib/;git+ssh://git@github.com/camsai/;g' \
           ${{ inputs.requirements-file-basename }}
 
     - name: Install dependencies
