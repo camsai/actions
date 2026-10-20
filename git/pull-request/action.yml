@@ -31,14 +31,14 @@ runs:
   using: composite
   steps:
     - name: Checkout target repository
-      uses: actions/checkout@v2  # checks out actions repository
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       with:
         repository: ${{ inputs.target-repository }}
         token: ${{ inputs.github-token }}
         path: ${{ inputs.target-repository }}
 
     - name: Setup NodeJS
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
         node-version: ${{ inputs.node-version }}
         registry-url: https://registry.npmjs.org
@@ -47,7 +47,9 @@ runs:
     - name: Replace early version(s) in package.json
       shell: bash -l {0}
       run: |
-        echo "${{ inputs.source-package-name }}, ${{ inputs.target-repository }}, ${{ inputs.target-version }}"
+        echo "source package name: ${{ inputs.source-package-name }}"
+        echo "target repository: ${{ inputs.target-repository }}"
+        echo "target version: ${{ inputs.target-version }}"
         sudo npm cache verify
         cd ${{ inputs.target-repository }}
         npm i ${{ inputs.source-package-name }}@latest
